@@ -1,14 +1,39 @@
+FROM node:18-alpine AS builder
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json pnpm-lock.yaml ./
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Copy the rest of the application
+COPY . .
+
+# Build the application
+RUN pnpm run build
+
+# Production stage
 FROM node:18-alpine
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm ci --only=production
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
-COPY . .
+# Copy package files
+COPY package.json pnpm-lock.yaml ./
 
-RUN npm run build
+# Install production dependencies only
+RUN pnpm install --frozen-lockfile --prod
 
-EXPOSE 3000
+# Copy built application from builder stage
+COPY --from=builder /app/dist ./dist
 
-CMD ["npm", "run", "start:prod"]
+EXPOSE 3000è
+
+CMD ["pnpm", "start:prod"]
