@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -28,8 +29,8 @@ export class UsersService {
     // Check if email already exists
     const existingUser = await this.userRepository.findOne({
       where: { email: createUserDto.email },
-    })
-    if(existingUser) {
+    });
+    if (existingUser) {
       throw new Error('User with this email already exists');
     }
 
@@ -37,7 +38,7 @@ export class UsersService {
     const saltRounds = 12;
     const hashedPassword = await bcrypt.hash(
       createUserDto.password,
-      saltRounds,
+      saltRounds
     );
 
     // Create a user with default preferences
@@ -50,14 +51,19 @@ export class UsersService {
         notifications: true,
         emailNotifications: true,
         timezone: 'UTC',
-        language: 'en'
-      }
-    })
+        language: 'en',
+      },
+    });
 
-    // Send verification email after creation
-    // await this.sendEmailVerification(user.id);
-
-    return this.userRepository.save(user);
+    try {
+      // Send verification email after creation
+      // await this.sendEmailVerification(user.id);
+      return await this.userRepository.save(user);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Failed to create user, ${error.message}`
+      );
+    }
   }
 
   async findAll(queryDto: QueryUsersDto): Promise<PaginatedResponse<User>> {
@@ -73,18 +79,18 @@ export class UsersService {
 
     const query = this.userRepository.createQueryBuilder('user');
     // Apply filter
-    if(search) {
+    if (search) {
       query.where(
         '(user.firstName ILIKE :search OR user.lastName ILIKE :search OR user.email ILIKE :search)',
         { search: `%${search}%` }
-      )
+      );
     }
 
-    if(role) {
+    if (role) {
       query.andWhere('user.role = :role', { role });
     }
 
-    if(isActive !== undefined) {
+    if (isActive !== undefined) {
       query.andWhere('user.isActive = :isActive', { isActive });
     }
 
@@ -105,16 +111,16 @@ export class UsersService {
       totalPages: Math.ceil(total / limit),
       hasNextPage: page < Math.ceil(total / limit),
       hasPreviousPage: page > 1,
-    }
+    };
   }
 
   async findById(id: string): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { id },
-      relations: ['tasks', 'categories', 'notifications']
-    })
+      relations: ['tasks', 'categories', 'notifications'],
+    });
 
-    if(!user) {
+    if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
 
@@ -124,29 +130,29 @@ export class UsersService {
   async findByEmail(email: string): Promise<User | null> {
     return this.userRepository.findOne({
       where: { email },
-      select: ['id', 'email', 'password', 'role', 'isActive']
-    })
+      select: ['id', 'email', 'password', 'role', 'isActive'],
+    });
   }
 
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     const user = await this.findById(id);
     // Check if an email is being updated
-    if(updateUserDto.email && updateUserDto.email !== user.email) {
+    if (updateUserDto.email && updateUserDto.email !== user.email) {
       const existingUser = await this.userRepository.findOne({
         where: { email: updateUserDto.email },
       });
-      if(existingUser) {
+      if (existingUser) {
         throw new Error('User with this email already exists');
       }
     }
 
     // Hash new password if provided
-    if(updateUserDto.password) {
+    if (updateUserDto.password) {
       const saltRounds = 12;
       updateUserDto.password = await bcrypt.hash(
         updateUserDto.password,
-        saltRounds,
-      )
+        saltRounds
+      );
     }
 
     // Merge updates
@@ -154,22 +160,25 @@ export class UsersService {
     return this.userRepository.save(user);
   }
 
-  async updatePreferences(id: string, updatePreferencesDto: UpdatePreferencesDto): Promise<User> {
+  async updatePreferences(
+    id: string,
+    updatePreferencesDto: UpdatePreferencesDto
+  ): Promise<User> {
     const user = await this.findById(id);
     // Initialize preferences if not exists
-    if(!user.preferences) {
+    if (!user.preferences) {
       user.preferences = {
         theme: 'light',
         notifications: true,
         emailNotifications: true,
         timezone: 'UTC',
-        language: 'en'
-      }
+        language: 'en',
+      };
     }
     // Merge existing preferences with updates
     user.preferences = {
       ...user.preferences,
-      ...updatePreferencesDto
+      ...updatePreferencesDto,
     };
     return this.userRepository.save(user);
   }
@@ -177,7 +186,6 @@ export class UsersService {
   async remove(id: string): Promise<void> {
     const user = await this.findById(id);
     await this.userRepository.remove(user);
-
   }
 
   async deactivateUser(id: string): Promise<User> {
@@ -201,11 +209,15 @@ export class UsersService {
 
     await this.userRepository.update(userId, {
       emailVerificationToken: token,
-      emailVerificationTokenExpires: expires
+      emailVerificationTokenExpires: expires,
     });
 
     // Send verification email
-    await this.mailService.sendVerificationEmail(user.email, token);
+    try {
+      await this.mailService.sendVerificationEmail(user.email, token);
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to send verification email');
+    }
   }
 
   async verifyEmailWithToken(token: string): Promise<User> {
@@ -225,7 +237,7 @@ export class UsersService {
       ...user,
       isEmailVerified: true,
       emailVerificationToken: null,
-      emailVerificationTokenExpires: null
+      emailVerificationTokenExpires: null,
     });
   }
 
