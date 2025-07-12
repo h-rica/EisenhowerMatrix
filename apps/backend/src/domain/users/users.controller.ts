@@ -17,6 +17,8 @@ import { CurrentUser } from '../../core/decorators/current-user.decorator';
 import { User } from './entities/user.entity';
 import { JwtAuthGuard } from '../../core/guards/jwt-auth.guard';
 import { RolesGuard } from '../../core/guards/roles.guard';
+import { UpdatePreferencesDto } from './dto/update-preferences.dto';
+import { QueryUsersDto } from './dto/query-users.dto';
 
 
 @ApiTags("Users")
