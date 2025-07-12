@@ -40,6 +40,13 @@ export class User {
   @Column({ default: false })
   isEmailVerified: boolean;
 
+  @Column({ nullable: true, length: 100 })
+  @Exclude()
+  emailVerificationToken?: string;
+
+  @Column({ nullable: true })
+  emailVerificationTokenExpires?: Date;
+
   @Column({ nullable: true })
   lastLoginAt?: Date;
 
