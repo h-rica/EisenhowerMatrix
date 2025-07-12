@@ -1,20 +1,27 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { User } from './entities/user.entity';
 import { UserRole } from '../../core/enums/user-role.enum';
 import { QueryUsersDto } from './dto/query-users.dto';
 import { PaginatedResponse } from '../../core/interfaces/paginated-response.interface';
 import { UpdatePreferencesDto } from './dto/update-preferences.dto';
+import { MailService } from '../../core/services/mail/mail.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly mailService: MailService
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
@@ -33,7 +40,7 @@ export class UsersService {
       saltRounds,
     );
 
-    // Create user with default preferences
+    // Create a user with default preferences
     const user = this.userRepository.create({
       ...createUserDto,
       password: hashedPassword,
@@ -46,6 +53,9 @@ export class UsersService {
         language: 'en'
       }
     })
+
+    // Send verification email after creation
+    // await this.sendEmailVerification(user.id);
 
     return this.userRepository.save(user);
   }
@@ -180,6 +190,43 @@ export class UsersService {
     const user = await this.findById(id);
     user.isActive = true;
     return this.userRepository.save(user);
+  }
+
+  async sendEmailVerification(userId: string): Promise<void> {
+    const user = await this.findById(userId);
+
+    // Generate a verification token (valid for 24 hours)
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await this.userRepository.update(userId, {
+      emailVerificationToken: token,
+      emailVerificationTokenExpires: expires
+    });
+
+    // Send verification email
+    await this.mailService.sendVerificationEmail(user.email, token);
+  }
+
+  async verifyEmailWithToken(token: string): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { emailVerificationToken: token },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Invalid verification token');
+    }
+
+    if (user.emailVerificationTokenExpires < new Date()) {
+      throw new BadRequestException('Verification token has expired');
+    }
+
+    return this.userRepository.save({
+      ...user,
+      isEmailVerified: true,
+      emailVerificationToken: null,
+      emailVerificationTokenExpires: null
+    });
   }
 
   async verifyEmail(id: string): Promise<User> {

@@ -5,7 +5,7 @@ import {
   Body,
   Patch,
   Param,
-  Delete, Query, UseGuards
+  Delete, Query, UseGuards, HttpCode, HttpStatus
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -19,6 +19,7 @@ import { JwtAuthGuard } from '../../core/guards/jwt-auth.guard';
 import { RolesGuard } from '../../core/guards/roles.guard';
 import { UpdatePreferencesDto } from './dto/update-preferences.dto';
 import { QueryUsersDto } from './dto/query-users.dto';
+import { Public } from '../../core/decorators/public.decorator';
 
 
 @ApiTags("Users")
@@ -65,6 +66,16 @@ export class UsersController {
     return this.usersService.findById(id);
   }
 
+  @Public()
+  @Get('verify-email/:token')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Verify user email' })
+  @ApiResponse({ status: 200, description: 'Email verified successfully' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async verifyEmail(@Param('token') token: string) {
+    return this.usersService.verifyEmailWithToken(token);
+  }
+
   @Patch('me')
   @ApiOperation({ summary: 'Update current user profile' })
   @ApiResponse({ status: 200, description: 'User updated successfully' })
@@ -95,6 +106,40 @@ export class UsersController {
   @ApiResponse({ status: 403, description: 'Forbidden - Admin role required' })
   async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.update(id, updateUserDto);
+  }
+
+  @Patch('me/deactivate')
+  @ApiOperation({ summary: 'Deactivate current user account' })
+  @ApiResponse({ status: 200, description: 'Account deactivated successfully' })
+  async deactivateAccount(@CurrentUser() user: User) {
+    return this.usersService.deactivateUser(user.id);
+  }
+
+  @Patch(':id/deactivate')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Deactivate user by ID (Admin only)' })
+  @ApiResponse({ status: 200, description: 'User deactivated successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin role required' })
+  async deactivateUser(@Param('id') id: string) {
+    return this.usersService.deactivateUser(id);
+  }
+
+  @Patch(':id/activate')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Activate user by ID (Admin only)' })
+  @ApiResponse({ status: 200, description: 'User activated successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin role required' })
+  async activateUser(@Param('id') id: string) {
+    return this.usersService.activateUser(id);
+  }
+
+  @Post('resend-verification')
+  @ApiOperation({ summary: 'Resend email verification' })
+  @ApiResponse({ status: 200, description: 'Verification email sent' })
+  async resendVerification(@CurrentUser() user: User) {
+    return this.usersService.sendEmailVerification(user.id);
   }
 
   @Delete('me')
