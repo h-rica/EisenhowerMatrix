@@ -11,7 +11,7 @@ import {
 import { User } from '../../users/entities/user.entity';
 import { TaskPriority } from '../../../core/enums/task-priority.enum';
 import { TaskStatus } from '../../../core/enums/task-status.enum';
-import { Category } from '../../category/entities/category.entity';
+import { Category } from '../../categories/entities/category.entity';
 
 @Entity('tasks')
 @Index(['userId', 'priority', 'status', 'dueDate'])
