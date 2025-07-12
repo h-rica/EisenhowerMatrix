@@ -46,8 +46,8 @@ export class User {
   @Column({ type: 'json', nullable: true })
   preferences?: {
     theme: 'light' | 'dark';
-    notification: boolean;
-    emailNotification: boolean;
+    notifications: boolean;
+    emailNotifications: boolean;
     timezone: string;
     language: string;
   };
