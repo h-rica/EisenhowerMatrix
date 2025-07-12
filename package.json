@@ -2,7 +2,19 @@
   "name": "@eisenhower-matrix/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "lint:backend": "nx eslint:lint backend",
+    "lint:frontend": "nx eslint:lint frontend",
+    "lint:all": "nx run-many --target=eslint:lint --all",
+    "lint:fix:backend": "nx eslint:lint backend --fix",
+    "lint:fix:frontend": "nx eslint:lint frontend --fix",
+    "lint:fix:all": "nx run-many --target=eslint:lint --all --fix",
+    "format:backend": "nx format:write --projects=backend",
+    "format:frontend": "nx format:write --projects=frontend",
+    "format:all": "nx format:write --all",
+    "format:check:all": "nx format:check --all",
+    "fix:all": "pnpm lint:fix:all && pnpm run format:all"
+  },
   "private": true,
   "dependencies": {
     "@angular-devkit/build-angular": "~20.0.0",
