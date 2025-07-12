@@ -8,6 +8,7 @@ import { User } from './entities/user.entity';
 import { UserRole } from '../../core/enums/user-role.enum';
 import { QueryUsersDto } from './dto/query-users.dto';
 import { PaginatedResponse } from '../../core/interfaces/paginated-response.interface';
+import { UpdatePreferencesDto } from './dto/update-preferences.dto';
 
 @Injectable()
 export class UsersService {
@@ -143,7 +144,7 @@ export class UsersService {
     return this.userRepository.save(user);
   }
 
-  async updatePreferences(id: string, updatePreferencesDto: UpdateUserDto): Promise<User> {
+  async updatePreferences(id: string, updatePreferencesDto: UpdatePreferencesDto): Promise<User> {
     const user = await this.findById(id);
     // Initialize preferences if not exists
     if(!user.preferences) {
@@ -167,5 +168,27 @@ export class UsersService {
     const user = await this.findById(id);
     await this.userRepository.remove(user);
 
+  }
+
+  async deactivateUser(id: string): Promise<User> {
+    const user = await this.findById(id);
+    user.isActive = false;
+    return this.userRepository.save(user);
+  }
+
+  async activateUser(id: string): Promise<User> {
+    const user = await this.findById(id);
+    user.isActive = true;
+    return this.userRepository.save(user);
+  }
+
+  async verifyEmail(id: string): Promise<User> {
+    const user = await this.findById(id);
+    user.isEmailVerified = true;
+    return this.userRepository.save(user);
+  }
+
+  async updateLastLogin(id: string): Promise<void> {
+    await this.userRepository.update(id, { lastLoginAt: new Date() });
   }
 }
