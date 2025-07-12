@@ -13,7 +13,8 @@
     "format:frontend": "nx format:write --projects=frontend",
     "format:all": "nx format:write --all",
     "format:check:all": "nx format:check --all",
-    "fix:all": "pnpm lint:fix:all && pnpm run format:all"
+    "fix:all": "pnpm lint:fix:all && pnpm run format:all",
+    "untrack-env": "git rm --cached apps/backend/.env"
   },
   "private": true,
   "dependencies": {
