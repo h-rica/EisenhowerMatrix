@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { Task } from '../../domain/tasks/entities/task.entity';
 import { Category } from '../../domain/categories/entities/category.entity';
 import { User } from '../../domain/users/entities/user.entity';
+import { Notification } from '../../domain/notifications/entities/notification.entity';
 
 @Injectable()
 export class DatabaseConfig implements TypeOrmOptionsFactory {
