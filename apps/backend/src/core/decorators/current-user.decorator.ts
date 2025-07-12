@@ -1,4 +1,6 @@
-import { SetMetadata } from '@nestjs/common';
+import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 
-export const CurrentUser = (...args: string[]) =>
-  SetMetadata('current-user', args);
+export const CurrentUser = createParamDecorator((data: unknown, ctx: ExecutionContext): any => {
+  const request = ctx.switchToHttp().getRequest();
+  return request.user;
+})
