@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { UserRole } from '../../enums/user-role.enum';
+import { UserRole } from '../enums/user-role.enum';
 import { Reflector } from '@nestjs/core';
 
 @Injectable()
@@ -26,6 +26,6 @@ export class RolesGuard implements CanActivate {
 
     // Check if the current user has those roles
     const request = context.switchToHttp().getRequest();
-    return requiredRoles.some(role => this.roleHierarchy[request.user.role].includes(role));
+    return requiredRoles.some(role => this.roleHierarchy[request.user.role]?.includes(role));
   }
 }
