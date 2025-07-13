@@ -16,7 +16,7 @@ export class RolesGuard implements CanActivate {
     context: ExecutionContext
   ): boolean | Promise<boolean> | Observable<boolean> {
     // Capture which role is required
-    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>('role', [
+    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>('roles', [
       context.getHandler(),
     ]);
 
@@ -26,6 +26,6 @@ export class RolesGuard implements CanActivate {
 
     // Check if the current user has those roles
     const request = context.switchToHttp().getRequest();
-    return requiredRoles.some(role => this.roleHierarchy[request.user.role]?.includes(role));
+    return requiredRoles.some(role => this.roleHierarchy[request.user.roles]?.includes(role));
   }
 }

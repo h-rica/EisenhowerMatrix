@@ -49,4 +49,4 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     httpAdapter.reply(ctx.getResponse(), responseBody, httpStatus);
   }
-};
+}

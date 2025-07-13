@@ -45,7 +45,7 @@ export class UsersService {
     const user = this.userRepository.create({
       ...createUserDto,
       password: hashedPassword,
-      role: createUserDto.role || UserRole.USER,
+      roles: createUserDto.roles || [UserRole.USER],
       preferences: {
         theme: 'light',
         notifications: true,
@@ -130,7 +130,7 @@ export class UsersService {
   async findByEmail(email: string): Promise<User | null> {
     return this.userRepository.findOne({
       where: { email },
-      select: ['id', 'email', 'password', 'role', 'isActive'],
+      select: ['id', 'email', 'password', 'roles', 'isActive'],
     });
   }
 

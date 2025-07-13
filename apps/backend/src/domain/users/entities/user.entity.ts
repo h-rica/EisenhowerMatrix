@@ -27,9 +27,12 @@ export class User {
   @Column({
     type: 'enum',
     enum: UserRole,
-    default: UserRole.USER
+    default: [UserRole.USER],
+    array: true
   })
-  role: UserRole;
+  roles: UserRole[] = [
+    UserRole.USER
+  ];
 
   @Column({ nullable: true, length: 255})
   avatar?: string;

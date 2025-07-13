@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsEnum, IsOptional, IsString, Matches, MinLength } from 'class-validator';
+import { IsArray, IsEmail, IsEnum, IsOptional, IsString, Matches, MinLength } from 'class-validator';
 import { UserRole } from '../../../core/enums/user-role.enum';
 
 export class CreateUserDto {
@@ -34,13 +34,14 @@ export class CreateUserDto {
 
   @ApiPropertyOptional({
     enum: UserRole,
-    default: UserRole.USER,
+    isArray: true,
+    default: [UserRole.USER],
     description: 'User role (default: USER)'
   })
-
-  @IsEnum(UserRole)
+  @IsArray()
+  @IsEnum(UserRole, { each: true })
   @IsOptional()
-  role?: UserRole;
+  roles?: UserRole[];
 
   @ApiPropertyOptional({
     example: 'https://example.com/avatar.jpg',
@@ -49,4 +50,13 @@ export class CreateUserDto {
   @IsString()
   @IsOptional()
   avatar?: string;
+
+  constructor(lastName: string, firstName: string, email: string, password: string, roles?: UserRole[], avatar?: string) {
+    this.firstName = firstName;
+    this.lastName = lastName;
+    this.email = email;
+    this.password = password;
+    this.roles = roles;
+    this.avatar = avatar;
+  }
 }
