@@ -1,6 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { NxWelcome } from './nx-welcome';
+import { SettingsService } from './services/settings.service';
 
 @Component({
   imports: [RouterModule],
@@ -8,6 +8,13 @@ import { NxWelcome } from './nx-welcome';
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
-export class App {
-  protected title = 'frontend';
+export class App implements OnInit {
+  protected title = 'Eisenhower Agile';
+
+  constructor(private settingsService: SettingsService) {}
+
+  ngOnInit(): void {
+    // Initialize settings service to apply theme on app start
+    this.settingsService.settings();
+  }
 }
