@@ -216,7 +216,7 @@ export class UsersService {
     try {
       await this.mailService.sendVerificationEmail(user.email, token);
     } catch (error) {
-      throw new InternalServerErrorException('Failed to send verification email');
+      throw new InternalServerErrorException('Failed to send verification email. ', error.message);
     }
   }
 
